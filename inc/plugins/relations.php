@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Relations  - by risuena
  * Beziehungen von Charakteren zueinander
@@ -41,14 +42,13 @@ function relations_uninstall()
     if ($db->field_exists("r_id", "relas")) {
         $db->drop_table("relas");
     }
-    $db->query("ALTER TABLE ".TABLE_PREFIX."users DROP rela_cat");
-
+    $db->query("ALTER TABLE " . TABLE_PREFIX . "users DROP rela_cat");
 }
 
 function relations_install()
 {
     global $db;
-    $db->query("CREATE TABLE `".TABLE_PREFIX."relas` (
+    $db->query("CREATE TABLE `" . TABLE_PREFIX . "relas` (
 	`r_id` int(10) NOT NULL AUTO_INCREMENT,
 	`r_from` int(10) NOT NULL,
 	`r_to` int(10) NOT NULL,
@@ -63,8 +63,6 @@ function relations_install()
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
 
     $db->add_column("users", "rela_cat", "varchar(500) NOT NULL default ',Familie,Freunde,Liebe,Bekannte,Ungemocht,Sonstiges,'");
-
-
 }
 
 function relations_is_installed()
@@ -517,8 +515,7 @@ function relations_activate()
         )
     );
 
-    foreach($setting_array as $name => $setting)
-    {
+    foreach ($setting_array as $name => $setting) {
         $setting['name'] = $name;
         $setting['gid'] = $gid;
         $db->insert_query('settings', $setting);
@@ -554,7 +551,8 @@ function relations_deactivate()
  * Parameter: uid des users
  * return: Array mit den einzelnen Kategorien
  */
-function get_Cats($uid){
+function get_Cats($uid)
+{
     global $db, $mybb;
     $query_cats = $db->query("SELECT rela_cat FROM " . TABLE_PREFIX . "users WHERE uid = " . $uid . "");
     $kategorien_string = $db->fetch_field($query_cats, 'rela_cat');
@@ -571,7 +569,8 @@ function get_Cats($uid){
  * $check_kat = Aus Query -> zum check welche ist vorausgewählt?
  * $inputs_own um alle zusammenzufügen
  */
-function relas_ucp_buildInput($kategorien_own, $check_kat,$inputs_own){
+function relas_ucp_buildInput($kategorien_own, $check_kat, $inputs_own)
+{
     //   $inputs_own="";
     foreach ($kategorien_own as $kategorie_own) {
         if ($check_kat == $kategorie_own) {
@@ -590,14 +589,15 @@ function relas_ucp_buildInput($kategorien_own, $check_kat,$inputs_own){
  * Anfragen bei einem User
  */
 $plugins->add_hook("member_profile_start", "relations_profile");
-function relations_profile(){
+function relations_profile()
+{
     global $db, $mybb, $templates, $rela_anfrage, $relas_profil, $auf_profil, $inputs_own, $showrelas, $relas_ucpAddNPC;
     require_once MYBB_ROOT . "inc/datahandlers/pm.php";
     $pmhandler = new PMDataHandler();
-    require_once MYBB_ROOT."inc/class_parser.php";
+    require_once MYBB_ROOT . "inc/class_parser.php";
     $parser = new postParser();
-    $opt_mybbcode=intval($mybb->settings['relas_mycode']);
-    $opt_html=intval($mybb->settings['relas_html']);
+    $opt_mybbcode = intval($mybb->settings['relas_mycode']);
+    $opt_html = intval($mybb->settings['relas_html']);
     $options = array(
         "allow_html" => $opt_html,
         "allow_mycode" => $opt_mybbcode,
@@ -608,8 +608,8 @@ function relations_profile(){
         "allow_videocode" => 0,
     );
 
-    $opt_img_guest=intval($mybb->settings['relas_img_guests']);
-    $opt_npc_img=intval($mybb->settings['relas_npc_img']);
+    $opt_img_guest = intval($mybb->settings['relas_img_guests']);
+    $opt_npc_img = intval($mybb->settings['relas_npc_img']);
 
     //variablen leeren
     $rela_anfrage = $dieser_user = $auf_profil = $formularanzeige = '';
@@ -687,23 +687,23 @@ function relations_profile(){
                 $rnpcname = htmlentities($get_relas['r_npcname']);
                 $r_npc = $get_relas['r_npc'];
                 $img_width = intval($mybb->settings['relas_img_width']);
-                $tab_width = $img_width +5;
-                $who_img = '<img src="' . $who['avatar'] .'"  width="'.$img_width.'"/>';
+                $tab_width = $img_width + 5;
+                $who_img = '<img src="' . $who['avatar'] . '"  width="' . $img_width . '"/>';
 
                 if ($r_npc == 1) {
                     $who_link = $rnpcname;
                     //Wenn Bild bei NPC erlaubt
-                    if($opt_npc_img == 0 ){
+                    if ($opt_npc_img == 0) {
                         $tab_width = "1px";
                         $who_img = "";
                     } else {
-                        $who_img = '<img src="' . $get_relas['r_npcimg'] .'"  width="'.$img_width.'"/>';
+                        $who_img = '<img src="' . $get_relas['r_npcimg'] . '"  width="' . $img_width . '"/>';
                     }
                 }
 
                 //Gäste dürfen keine bilder sehen
-                if ($mybb->user['uid'] == 0 && $opt_img_guest==0){
-                    $who_img="";
+                if ($mybb->user['uid'] == 0 && $opt_img_guest == 0) {
+                    $who_img = "";
                     $tab_width = "1px";
                 }
 
@@ -716,7 +716,6 @@ function relations_profile(){
                 $kat_titel = ${$kategorie . 'titel'};
 
                 eval("\$showrelas .= \"" . $templates->get("relas_showInProfil") . "\";");
-
             }
         }
     }
@@ -736,24 +735,23 @@ function relations_profile(){
         $to_array = get_user($dieser_user);
         $fromlink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
         echo $mybb->input['kategorie'];
-        $kat= $mybb->input['kategorie'];
+        $kat = $mybb->input['kategorie'];
         if (empty($kat)) {
             echo "<script>alert('Bitte eine Kategorie auswählen')</script>";
-   
-          echo "<meta http-equiv='refresh' content='0'>";
 
-        } else if ($kat != ""){
+            echo "<meta http-equiv='refresh' content='0'>";
+        } else if ($kat != "") {
             //eintragen
             $db->insert_query("relas", $rela_anfrage);
 
+            $pmkom = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
             //PN losschicken
             $pm_change = array(
                 "subject" => "Relationsanfrage",
-                "message" => $fromlink . " hat dir eine Relationsanfrage gestellt. <br />
-        [QUOTE]" . $db->escape_string($mybb->input['kommentar']) .
-                    "
-        [/QUOTE]<br/>
-        Schau in dein <a href='usercp.php?action=relas_usercp'>User CP</a> um sie anzunehmen oder abzulehnen.",
+                "message" => $fromlink . ' hat dir eine Relationsanfrage gestellt. <br />
+                [QUOTE]' . $pmkom . ' 
+                [/QUOTE]<br/>
+                Schau in dein <a href="usercp.php?action=relas_usercp">User CP</a> um sie anzunehmen oder abzulehnen.',
                 //from: wer hat die anfrage gestellt
                 "fromid" => $dieser_user,
                 //to: wer muss die anfrage bestätigen, also auf wessen profil waren wir
@@ -766,9 +764,9 @@ function relations_profile(){
             } else {
                 $pmhandler->insert_pm();
             }
-            header('Location: member.php?action=profile&uid=' . $auf_profil);
+            //  header('Location: member.php?action=profile&uid=' . $auf_profil);
             echo "<meta http-equiv='refresh' content='0'>";
-        } 
+        }
     }
     eval("\$relas_profil .= \"" . $templates->get("relas_memberprofil") . "\";");
 }
@@ -784,7 +782,6 @@ function relas_usercp_menu()
 
     eval("\$relas_ucp_nav .= \"" . $templates->get("relas_ucp_nav") . "\";");
     $templates->cache["usercp_nav_misc"] = str_replace("<tbody style=\"{\$collapsed['usercpmisc_e']}\" id=\"usercpmisc_e\">", "<tbody style=\"{\$collapsed['usercpmisc_e']}\" id=\"usercpmisc_e\">{$relas_ucp_nav}", $templates->cache["usercp_nav_misc"]);
-
 }
 
 /*
@@ -797,12 +794,12 @@ function relas_usercp_menu()
 $plugins->add_hook("usercp_start", "relas_usercp");
 function relas_usercp()
 {
-    global $mybb, $db, $templates, $anfragen,$relas_ucpadmin,
-           $angefragt, $cache, $templates, $themes, $headerinclude,
-           $header, $footer, $usercpnav, $relas_ucp_offene,
-           $relas_ucp_accepted, $inputs_own, $titel,
-           $list_own_cats,$inputsRequest_own,
-            $relas_ucp_cats, $relas_ucp_catbit;
+    global $mybb, $db, $templates, $anfragen, $relas_ucpadmin,
+        $angefragt, $cache, $templates, $themes, $headerinclude,
+        $header, $footer, $usercpnav, $relas_ucp_offene,
+        $relas_ucp_accepted, $inputs_own, $titel,
+        $list_own_cats, $inputsRequest_own,
+        $relas_ucp_cats, $relas_ucp_catbit;
     if ($mybb->input['action'] != "relas_usercp") {
         return false;
     }
@@ -816,10 +813,10 @@ function relas_usercp()
     //eigene user id
     $dieser_user = intval($mybb->user['uid']);
     /* Einstellungen aus dem acp */
-    $opt_npc=intval($mybb->settings['relas_npc']);
-    $opt_npc_img=intval($mybb->settings['relas_npc_img']);
-    $opt_pmchange=intval($mybb->settings['relas_pmalert_change']);
-    $opt_pmdelete=intval($mybb->settings['relas_pmalert_delete']);
+    $opt_npc = intval($mybb->settings['relas_npc']);
+    $opt_npc_img = intval($mybb->settings['relas_npc_img']);
+    $opt_pmchange = intval($mybb->settings['relas_pmalert_change']);
+    $opt_pmdelete = intval($mybb->settings['relas_pmalert_delete']);
 
     $reaktion = '';
 
@@ -841,7 +838,7 @@ function relas_usercp()
     }
 
     eval("\$relas_ucp_cats = \"" . $templates->get("relas_ucp_cats") . "\";");
-//    $list_own_cats = '<table width="200px" class="table_own_cats_ucp">' . $list_own_cats_li . '</table>';
+    //    $list_own_cats = '<table width="200px" class="table_own_cats_ucp">' . $list_own_cats_li . '</table>';
 
     /* eigene Kategorien verwalten und anzeige von akzeptierten Charas */
     while ($get_accepted = $db->fetch_array($ucp_akzeptiert)) {
@@ -875,20 +872,20 @@ function relas_usercp()
 				NPC Name: 
 				<input type="text" name="npcname" class ="rela_button npcname" value="' . $rnpcname . '">
 				</td></tr>';
-                $who_link = $rnpcname;
-                /*npc image ändern*/
-                if($opt_npc_img == 1) {
-                    $feld_npcimg =  '
+            $who_link = $rnpcname;
+            /*npc image ändern*/
+            if ($opt_npc_img == 1) {
+                $feld_npcimg =  '
 				<tr><td align="left" colspan="2">
 				NPC Bild:
 				<input type="text" name="npcimg" class ="rela_button npcimg" value="' . $rnpcimg . '">
 				</td></tr>';
-                }
+            }
         }
         /*radio input Kategorien bauen -> Hilfsfunktion aufrufen*/
         $inputs_own = relas_ucp_buildInput($kategorien_own, $kategorie, $inputs_own);
         eval("\$relas_ucp_accepted .= \"" . $templates->get("relas_accepted") . "\";");
-        $feld_npcimg="";
+        $feld_npcimg = "";
     }
 
     // eigene Kategorien löschen
@@ -905,36 +902,36 @@ function relas_usercp()
     }
 
     //eigene Kategorie hinzufügen
-if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input['toAddCat']))) {
+    if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input['toAddCat']))) {
         $db->query("UPDATE " . TABLE_PREFIX . "users SET rela_cat = concat(rela_cat,'" . $mybb->input['toAddCat'] . ",') WHERE uid = " . $dieser_user . "");
         echo "<meta http-equiv='refresh' content='0'>";
-} elseif ($_POST['addCat'] &&  (empty($mybb->input['toAddCat']) || isset($mybb->input['toAddCat']))) {
-  echo"<script>alert('Du kannst keine leeren Kategorien erstellen.')</script>		<script>
+    } elseif ($_POST['addCat'] &&  (empty($mybb->input['toAddCat']) || isset($mybb->input['toAddCat']))) {
+        echo "<script>alert('Du kannst keine leeren Kategorien erstellen.')</script>		<script>
 	<!--
 	window.location.replace('usercp.php?action=relas_usercp');
 	//-->
 	</script></font>";
-}
+    }
 
     //akzeptierte Charaktere ändern
     if (isset($mybb->input['change'])) {
         //id setzen
         $relaid = intval($mybb->input['getrela']);
         $upd_kat = $db->escape_string($mybb->input['kategorie']);
-        $upd_kommentar = $db->escape_string($mybb->input['kommentar']);
+        $upd_kommentar = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
         $upd_sort = intval($mybb->input['sort']);
         $npcname = $db->escape_string($mybb->input['npcname']);
         $npcimg = $db->escape_string($mybb->input['npcimg']);
 
-        $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='".$relaid."'", array('LIMIT' => 1));
+        $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
         $checknpc = $db->fetch_field($query_npc, 'r_npc');
 
         //PN nur wenn eingestellt
-        if ($opt_pmchange == 1 && $checknpc == 0){
+        if ($opt_pmchange == 1 && $checknpc == 0) {
             $pm_reanfrage = array(
                 "subject" => "Relations Änderung",
                 "message" =>
-                    'Ich hab etwas an unserem Relationseintrag geändert.
+                'Ich hab etwas an unserem Relationseintrag geändert.
                 [quote]' . $upd_kommentar . '[/quote]
                 <br /> Du kannst es dir in deinem <a href="usercp.php?action=relas_usercp">User CP</a> anschauen.
                 ',
@@ -951,38 +948,38 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
                 $pmhandler->insert_pm();
             }
         }
-        $db->query("UPDATE " . TABLE_PREFIX . "relas SET r_kategorie = '" . $upd_kat . "', r_kommentar = '" . $upd_kommentar . "', r_sort = '" . $upd_sort . "', r_npcname = '" . $npcname . "', r_npcimg ='".$npcimg."' WHERE r_id = " . $relaid . "");
+        $db->query("UPDATE " . TABLE_PREFIX . "relas SET r_kategorie = '" . $upd_kat . "', r_kommentar = '" . $upd_kommentar . "', r_sort = '" . $upd_sort . "', r_npcname = '" . $npcname . "', r_npcimg ='" . $npcimg . "' WHERE r_id = " . $relaid . "");
         echo "<meta http-equiv='refresh' content='0'>";
     }
 
     //akzeptiere Charaktere löschen
-    if (isset($mybb->input['delete'])){
+    if (isset($mybb->input['delete'])) {
         //PN nur wenn eingestellt
         $relaid = intval($mybb->input['getrela']);
 
-        $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='".$relaid."'", array('LIMIT' => 1));
+        $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
         $checknpc = $db->fetch_field($query_npc, 'r_npc');
 
-        if($opt_pmdelete == 1 && $checknpc == 0){
-        //id setzen
+        if ($opt_pmdelete == 1 && $checknpc == 0) {
+            //id setzen
 
-        $pm_reanfrage = array(
-            "subject" => "Relations - Löschung",
-            "message" =>
+            $pm_reanfrage = array(
+                "subject" => "Relations - Löschung",
+                "message" =>
                 'Ich hab unseren Eintrag gelöscht.',
-            //to: wer muss die anfrage bestätigen
-            "fromid" => intval($mybb->input['getfrom']),
-            //from: wer hat die anfrage gestellt
-            "toid" => intval($mybb->input['getto'])
-        );
-        // $pmhandler->admin_override = true;
-        $pmhandler->set_data($pm_reanfrage);
-        if (!$pmhandler->validate_pm()){
-            return false;
-        }else {
-            $pmhandler->insert_pm();
+                //to: wer muss die anfrage bestätigen
+                "fromid" => intval($mybb->input['getfrom']),
+                //from: wer hat die anfrage gestellt
+                "toid" => intval($mybb->input['getto'])
+            );
+            // $pmhandler->admin_override = true;
+            $pmhandler->set_data($pm_reanfrage);
+            if (!$pmhandler->validate_pm()) {
+                return false;
+            } else {
+                $pmhandler->insert_pm();
+            }
         }
-    }
         $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
         echo "<meta http-equiv='refresh' content='0'>";
     }
@@ -997,8 +994,7 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
 			(r_to = '$dieser_user' AND r_accepted = '0')
 			OR
 			(r_from = '$dieser_user' AND r_accepted = '0')
-		ORDER BY r_to, r_accepted, r_sort"
-    );
+		ORDER BY r_to, r_accepted, r_sort");
 
     while ($get_anfrage = $db->fetch_array($ucp_offeneanfragen)) {
         $anfragender = get_user($get_anfrage['r_from']);
@@ -1014,7 +1010,7 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
         $inputsRequest_own = "";
 
         /* Hilfsfunktion aufrufen: Stelle die radiobuttons für auswählbaren Kategorien zusammen*/
-        $inputsRequest_own = relas_ucp_buildInput($kategorien_own,$gefragte_kategorie,$inputsRequest_own);
+        $inputsRequest_own = relas_ucp_buildInput($kategorien_own, $gefragte_kategorie, $inputsRequest_own);
         $reaktion = "";
 
         if ($get_anfrage['r_from'] != $dieser_user) {
@@ -1027,7 +1023,7 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
         eval("\$relas_ucp_offene_nr .= \"" . $templates->get("relas_ucp_offene_nr") . "\";");
     }
 
-   /* Eine bekommene Anfrage bestätigen und direkt eigene Informationen losschicken */
+    /* Eine bekommene Anfrage bestätigen und direkt eigene Informationen losschicken */
     if (isset($mybb->input['reeintragen'])) {
         $relaid = intval($mybb->input['getrela']);
         //von wem wurde die anfrage geshickt?
@@ -1049,12 +1045,12 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
         );
 
         $db->insert_query("relas", $rela_anfrage);
-
+        $pm_kommentar = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
         $pm_reanfrage = array(
             "subject" => "Relations Anfrage",
             "message" =>
-                $tolink . ' hat deine Anfrage bestätigt und dich auch eingetragen.
-                [quote]' . htmlentities($mybb->input['kommentar']) . '[/quote]
+            $tolink . ' hat deine Anfrage bestätigt und dich auch eingetragen.
+                [quote]' . $pm_kommentar . '[/quote]
                 <br /> Du kannst es dir in deinem <a href="usercp.php?action=relas_usercp">User CP</a> anschauen.
                 ',
             //to: wer muss die anfrage bestätigen
@@ -1154,8 +1150,8 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
         echo "<meta http-equiv='refresh' content='0'>";
     }
 
-    $inputsRequest_own ="";
-    $inputsRequest_own= relas_ucp_buildInput($kategorien_own, $gefragte_kategorie,$inputsRequest_own);
+    $inputsRequest_own = "";
+    $inputsRequest_own = relas_ucp_buildInput($kategorien_own, $gefragte_kategorie, $inputsRequest_own);
 
     //Settings npc -> get template
     if ($opt_npc_img == 1) {
@@ -1202,18 +1198,20 @@ if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input
  *  freien index finden
  */
 $plugins->add_hook("admin_tools_menu", "relationstools_menu");
-function relationstools_menu($sub_menu) {
-    $key = count($sub_menu) *10 + 10; /* We need a unique key here so this works well. */
+function relationstools_menu($sub_menu)
+{
+    $key = count($sub_menu) * 10 + 10; /* We need a unique key here so this works well. */
     $sub_menu[$key] = array(
-        'id'	=> 'relations',
-        'title'	=> 'Relations Verwaltung',
-        'link'	=> 'index.php?module=tools-relations'
+        'id'    => 'relations',
+        'title'    => 'Relations Verwaltung',
+        'link'    => 'index.php?module=tools-relations'
     );
     return $sub_menu;
 }
 
 $plugins->add_hook("admin_tools_action_handler", "relationstools_action_handler");
-function relationstools_action_handler($actions) {
+function relationstools_action_handler($actions)
+{
     $actions['relations'] = array('active' => 'relations', 'file' => 'relations.php');
     return $actions;
 }
@@ -1224,7 +1222,8 @@ function relationstools_action_handler($actions) {
  * die relas des users löschen
  */
 $plugins->add_hook("admin_user_users_delete_commit_end", "user_delete");
-function user_delete(){
+function user_delete()
+{
     global $db, $cache, $mybb, $user;
     $todelete = (int)$user['uid'];
     $username = $db->escape_string($user['username']);
@@ -1234,8 +1233,6 @@ function user_delete(){
         'r_npcname' => $username
     );
     //   $db->update_query("{name_of_table}", $update_array, "WHERE {options}");
-    $db->update_query('relas', $update_other_relas, "r_to='".(int)$user['uid']."'");
-    $db->delete_query('relas', "r_from = ".(int)$user['uid']."");
+    $db->update_query('relas', $update_other_relas, "r_to='" . (int)$user['uid'] . "'");
+    $db->delete_query('relas', "r_from = " . (int)$user['uid'] . "");
 }
-
-?>
