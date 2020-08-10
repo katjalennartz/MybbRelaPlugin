@@ -1,3 +1,10 @@
+Support gibt es immer im SG 
+https://storming-gates.de/showthread.php?tid=1000461 
+
+Fehler gerne auch im github melden 
+https://github.com/katjalennartz/MybbRelaPlugin/issues
+
+
 Upgrade zu 1.1.
 -> gelöschte User werden von nun an zum NPC umgetragen
 -> MyCode und html kann aktiviert werden
