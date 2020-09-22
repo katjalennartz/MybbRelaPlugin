@@ -734,7 +734,7 @@ function relations_profile()
 
         $to_array = get_user($dieser_user);
         $fromlink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
-        echo $mybb->input['kategorie'];
+        //echo $mybb->input['kategorie'];
         $kat = $mybb->input['kategorie'];
         if (empty($kat)) {
             echo "<script>alert('Bitte eine Kategorie auswählen')</script>";
