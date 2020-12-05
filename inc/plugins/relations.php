@@ -956,13 +956,18 @@ function relas_usercp()
     if (isset($mybb->input['delete'])) {
         //PN nur wenn eingestellt
         $relaid = intval($mybb->input['getrela']);
-
-        $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
+  
+        $query_npc = $db->simple_select('relas', '*', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
         $checknpc = $db->fetch_field($query_npc, 'r_npc');
+        $checkdeleted = $db->fetch_field($db->simple_select('relas', '*', "r_id ='" . $relaid . "'", array('LIMIT' => 1)), 'r_to');
+        $query_guesterror = $db->simple_select('users', '*', "uid ='" . $checkdeleted . "'");
 
+        if (mysqli_num_rows($query_guesterror) == 0) {
+           $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
+           echo "<meta http-equiv='refresh' content='0'>";
+        }
         if ($opt_pmdelete == 1 && $checknpc == 0) {
             //id setzen
-
             $pm_reanfrage = array(
                 "subject" => "Relations - Löschung",
                 "message" =>
