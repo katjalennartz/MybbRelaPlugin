@@ -26,7 +26,7 @@ in die datenbank einloggen (phpmyadmin) -> sql ausführen
 (mybb_ mit tabellenpräfix ersetzen)
 
 DELETE:  
-DELETE FROM mybb_relas WHERE r_from NOT IN (SELECT uid FROM mybb_users) AND uid != 0
+DELETE FROM mybb_relas WHERE r_from NOT IN (SELECT uid FROM mybb_users)
 
 UPDATE: (die relas bei anderen charas zu npc umtragen)
 UPDATE mybb_relas SET r_to = 0 and r_npc = 1 WHERE r_to NOT IN (SELECT uid FROM mybb_users)
