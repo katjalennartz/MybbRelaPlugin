@@ -64,23 +64,7 @@ function relations_install()
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
 
     $db->add_column("users", "rela_cat", "varchar(500) NOT NULL default ',Familie,Freunde,Liebe,Bekannte,Ungemocht,Sonstiges,'");
-}
-
-function relations_is_installed()
-{
-    global $db;
-    if ($db->table_exists("relas")) {
-        return true;
-    }
-    return false;
-}
-
-function relations_activate()
-{
-    global $db, $mybb;
-    //template usercp
-    //template profil
-    $template[0] = array(
+$template[0] = array(
         "title" => 'relas_accepted',
         "template" => '
 				{$titel}
@@ -442,6 +426,24 @@ function relations_activate()
     foreach ($template as $row) {
         $db->insert_query("templates", $row);
     }
+
+
+}
+
+function relations_is_installed()
+{
+    global $db;
+    if ($db->table_exists("relas")) {
+        return true;
+    }
+    return false;
+}
+
+function relations_activate()
+{
+    global $db, $mybb;
+
+    
     include MYBB_ROOT . "/inc/adminfunctions_templates.php";
     find_replace_templatesets("member_profile", "#" . preg_quote('</fieldset>') . "#i", '</fieldset>{$relas_profil}');
 
