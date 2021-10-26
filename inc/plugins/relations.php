@@ -43,6 +43,7 @@ function relations_uninstall()
         $db->drop_table("relas");
     }
     $db->query("ALTER TABLE " . TABLE_PREFIX . "users DROP rela_cat");
+    $db->delete_query("templates", "title LIKE 'relas_%'");
 }
 
 function relations_install()
@@ -527,7 +528,6 @@ function relations_deactivate()
 {
     global $db;
     include MYBB_ROOT . "/inc/adminfunctions_templates.php";
-    $db->delete_query("templates", "title LIKE 'relas_%'");
 
     find_replace_templatesets("member_profile", "#" . preg_quote('{$relas_profil}') . "#i", '');
     // Einstellungen entfernen
