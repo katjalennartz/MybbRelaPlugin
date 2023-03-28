@@ -51,15 +51,15 @@ function relations_install()
     global $db;
     $db->write_query("CREATE TABLE `" . TABLE_PREFIX . "relas` (
 	`r_id` int(10) NOT NULL AUTO_INCREMENT,
-	`r_from` int(10) NOT NULL,
-	`r_to` int(10) NOT NULL,
-	`r_kategorie` varchar(150) NOT NULL,
-	`r_kommentar` varchar(2555) NOT NULL,
-	`r_sort` int(10) NOT NULL,
-	`r_accepted` int(10) NOT NULL,
-	`r_npc` int(11) NOT NULL,
-	`r_npcname` varchar(150) NOT NULL,
-	`r_npcimg` varchar(250) NOT NULL, 
+	`r_from` int(10) NOT NULL DEFAULT 0,
+	`r_to` int(10) NOT NULL DEFAULT 0,
+	`r_kategorie` varchar(150) NOT NULL DEFAULT '',
+	`r_kommentar` varchar(2555) NOT NULL DEFAULT '',
+	`r_sort` int(10) NOT NULL DEFAULT 0,
+	`r_accepted` int(10) NOT NULL DEFAULT 0,
+	`r_npc` int(11) NOT NULL DEfAULT 0,
+	`r_npcname` varchar(150) NOT NULL DEFAULT '',
+	`r_npcimg` varchar(250) NOT NULL DEFAULT '', 
 	PRIMARY KEY (`r_id`)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
 
