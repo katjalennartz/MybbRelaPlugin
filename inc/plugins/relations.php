@@ -14,8 +14,8 @@
  */
 
 // enable for Debugging:
-// error_reporting ( -1 );
-// ini_set ( 'display_errors', true );
+error_reporting(-1);
+ini_set('display_errors', true);
 
 global $db, $mybb;
 // Disallow direct access to this file for security reasons
@@ -42,14 +42,14 @@ function relations_uninstall()
     if ($db->field_exists("r_id", "relas")) {
         $db->drop_table("relas");
     }
-    $db->query("ALTER TABLE " . TABLE_PREFIX . "users DROP rela_cat");
+    $db->write_query("ALTER TABLE " . TABLE_PREFIX . "users DROP rela_cat");
     $db->delete_query("templates", "title LIKE 'relas_%'");
 }
 
 function relations_install()
 {
     global $db;
-    $db->query("CREATE TABLE `" . TABLE_PREFIX . "relas` (
+    $db->write_query("CREATE TABLE `" . TABLE_PREFIX . "relas` (
 	`r_id` int(10) NOT NULL AUTO_INCREMENT,
 	`r_from` int(10) NOT NULL,
 	`r_to` int(10) NOT NULL,
@@ -64,7 +64,7 @@ function relations_install()
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
 
     $db->add_column("users", "rela_cat", "varchar(500) NOT NULL default ',Familie,Freunde,Liebe,Bekannte,Ungemocht,Sonstiges,'");
-$template[0] = array(
+    $template[0] = array(
         "title" => 'relas_accepted',
         "template" => '
 				{$titel}
@@ -426,8 +426,6 @@ $template[0] = array(
     foreach ($template as $row) {
         $db->insert_query("templates", $row);
     }
-
-
 }
 
 function relations_is_installed()
@@ -443,7 +441,7 @@ function relations_activate()
 {
     global $db, $mybb;
 
-    
+
     include MYBB_ROOT . "/inc/adminfunctions_templates.php";
     find_replace_templatesets("member_profile", "#" . preg_quote('</fieldset>') . "#i", '</fieldset>{$relas_profil}');
 
@@ -556,7 +554,7 @@ function relations_deactivate()
 function get_Cats($uid)
 {
     global $db, $mybb;
-    $query_cats = $db->query("SELECT rela_cat FROM " . TABLE_PREFIX . "users WHERE uid = " . $uid . "");
+    $query_cats = $db->write_query("SELECT rela_cat FROM " . TABLE_PREFIX . "users WHERE uid = " . $uid . "");
     $kategorien_string = $db->fetch_field($query_cats, 'rela_cat');
     $kategorien = explode(',', $kategorien_string);
     array_shift($kategorien);
@@ -661,14 +659,14 @@ function relations_profile()
         $counter = 0;
 
         //Die Charaktere anzeigen zu denen eine Rela besteht
-        $get_relation = $db->query("
+        $get_relation = $db->write_query("
 				SELECT * FROM " . TABLE_PREFIX . "relas WHERE
 				(r_from = '$auf_profil' AND r_accepted = '1')
 				AND r_kategorie = '" . $kategorie . "'
 				ORDER BY r_sort
 				");
         //LEFT JOIN mybb_userfields ON mybb_users.uid = mybb_userfields.ufid
-        if (mysqli_num_rows($get_relation) > 0) {
+        if ($db->num_rows($get_relation) > 0) {
             while ($get_relas = $db->fetch_array($get_relation)) {
                 //Counter nötig um Kategorietitel(nur einmal) anzuzeigen
                 $counter++;
@@ -740,8 +738,8 @@ function relations_profile()
         $kat = $mybb->input['kategorie'];
         if (empty($kat)) {
             echo "<script>alert('Bitte eine Kategorie auswählen')</script>";
-
-            echo "<meta http-equiv='refresh' content='0'>";
+            redirect("member.php?action=profile&uid={$auf_profil}");
+            // echo "<meta http-equiv='refresh' content='0'>";
         } else if ($kat != "") {
             //eintragen
             $db->insert_query("relas", $rela_anfrage);
@@ -757,7 +755,17 @@ function relations_profile()
                 //from: wer hat die anfrage gestellt
                 "fromid" => $dieser_user,
                 //to: wer muss die anfrage bestätigen, also auf wessen profil waren wir
-                "toid" => $auf_profil
+                "toid" => $auf_profil,
+                "icon" => "",
+                "do" => "",
+                "pmid" => "",
+            );
+
+            $pm_change['options'] = array(
+                'signature' => '0',
+                'savecopy' => '0',
+                'disablesmilies' => '0',
+                'readreceipt' => '0',
             );
 
             $pmhandler->set_data($pm_change);
@@ -767,7 +775,8 @@ function relations_profile()
                 $pmhandler->insert_pm();
             }
             //  header('Location: member.php?action=profile&uid=' . $auf_profil);
-            echo "<meta http-equiv='refresh' content='0'>";
+            // echo "<meta http-equiv='refresh' content='0'>";
+            redirect("member.php?action=profile&uid={$auf_profil}");
         }
     }
     eval("\$relas_profil .= \"" . $templates->get("relas_memberprofil") . "\";");
@@ -781,7 +790,7 @@ $plugins->add_hook("usercp_menu", "relas_usercp_menu");
 function relas_usercp_menu()
 {
     global $templates;
-
+    $relas_ucp_nav = "";
     eval("\$relas_ucp_nav .= \"" . $templates->get("relas_ucp_nav") . "\";");
     $templates->cache["usercp_nav_misc"] = str_replace("<tbody style=\"{\$collapsed['usercpmisc_e']}\" id=\"usercpmisc_e\">", "<tbody style=\"{\$collapsed['usercpmisc_e']}\" id=\"usercpmisc_e\">{$relas_ucp_nav}", $templates->cache["usercp_nav_misc"]);
 }
@@ -823,7 +832,7 @@ function relas_usercp()
     $reaktion = '';
 
     //Ausgabe von vorhandenen Relas
-    $ucp_akzeptiert = $db->query("
+    $ucp_akzeptiert = $db->write_query("
 		SELECT * FROM " . TABLE_PREFIX . "relas WHERE
 		(r_from = '$dieser_user' AND r_accepted = '1')
 		OR
@@ -892,27 +901,20 @@ function relas_usercp()
 
     // eigene Kategorien löschen
     if ($mybb->input['deleteCat']) {
-        $db->query("UPDATE " . TABLE_PREFIX . "users SET rela_cat = replace(rela_cat,'" . $mybb->input['getCat'] . ",','') WHERE uid = " . $dieser_user . "");
-        echo "<meta http-equiv='refresh' content='0'>";
+        $db->write_query("UPDATE " . TABLE_PREFIX . "users SET rela_cat = replace(rela_cat,'" . $mybb->input['getCat'] . ",','') WHERE uid = " . $dieser_user . "");
+
         //Erinnerung an die User, die Kategorien zu aktualisieren
-        echo "<script>alert('Denk daran die Kategorien der Charaktere der Gelöschten zu aktualisieren. Sonst werden sie nicht im Profil angezeigt.')</script>		
-		<script>
-		<!--
-		window.location.replace('usercp.php?action=relas_usercp');
-		//-->
-		</script></font>";
+        echo "<script>alert('Denk daran die Kategorien der Charaktere der Gelöschten zu aktualisieren. Sonst werden sie nicht im Profil angezeigt.')</script>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     //eigene Kategorie hinzufügen
     if ($_POST['addCat'] && (!empty($mybb->input['toAddCat']) || !isset($mybb->input['toAddCat']))) {
-        $db->query("UPDATE " . TABLE_PREFIX . "users SET rela_cat = concat(rela_cat,'" . $mybb->input['toAddCat'] . ",') WHERE uid = " . $dieser_user . "");
-        echo "<meta http-equiv='refresh' content='0'>";
+        $db->write_query("UPDATE " . TABLE_PREFIX . "users SET rela_cat = concat(rela_cat,'" . $mybb->input['toAddCat'] . ",') WHERE uid = " . $dieser_user . "");
+        redirect('usercp.php?action=relas_usercp');
     } elseif ($_POST['addCat'] &&  (empty($mybb->input['toAddCat']) || isset($mybb->input['toAddCat']))) {
-        echo "<script>alert('Du kannst keine leeren Kategorien erstellen.')</script>		<script>
-	<!--
-	window.location.replace('usercp.php?action=relas_usercp');
-	//-->
-	</script></font>";
+        echo "<script>alert('Du kannst keine leeren Kategorien erstellen.')";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     //akzeptierte Charaktere ändern
@@ -940,7 +942,17 @@ function relas_usercp()
                 //to: wer muss die anfrage bestätigen
                 "fromid" => intval($mybb->input['getfrom']),
                 //from: wer hat die anfrage gestellt
-                "toid" => intval($mybb->input['getto'])
+                "toid" => intval($mybb->input['getto']),
+                "icon" => "",
+                "do" => "",
+                "pmid" => "",
+            );
+
+            $pm_reanfrage['options'] = array(
+                'signature' => '0',
+                'savecopy' => '0',
+                'disablesmilies' => '0',
+                'readreceipt' => '0',
             );
             // $pmhandler->admin_override = true;
             $pmhandler->set_data($pm_reanfrage);
@@ -950,23 +962,23 @@ function relas_usercp()
                 $pmhandler->insert_pm();
             }
         }
-        $db->query("UPDATE " . TABLE_PREFIX . "relas SET r_kategorie = '" . $upd_kat . "', r_kommentar = '" . $upd_kommentar . "', r_sort = '" . $upd_sort . "', r_npcname = '" . $npcname . "', r_npcimg ='" . $npcimg . "' WHERE r_id = " . $relaid . "");
-        echo "<meta http-equiv='refresh' content='0'>";
+        $db->write_query("UPDATE " . TABLE_PREFIX . "relas SET r_kategorie = '" . $upd_kat . "', r_kommentar = '" . $upd_kommentar . "', r_sort = '" . $upd_sort . "', r_npcname = '" . $npcname . "', r_npcimg ='" . $npcimg . "' WHERE r_id = " . $relaid . "");
+        redirect('usercp.php?action=relas_usercp');
     }
 
     //akzeptiere Charaktere löschen
     if (isset($mybb->input['delete'])) {
         //PN nur wenn eingestellt
         $relaid = intval($mybb->input['getrela']);
-  
+
         $query_npc = $db->simple_select('relas', '*', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
         $checknpc = $db->fetch_field($query_npc, 'r_npc');
         $checkdeleted = $db->fetch_field($db->simple_select('relas', '*', "r_id ='" . $relaid . "'", array('LIMIT' => 1)), 'r_to');
         $query_guesterror = $db->simple_select('users', '*', "uid ='" . $checkdeleted . "'");
 
-        if (mysqli_num_rows($query_guesterror) == 0) {
-           $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
-           echo "<meta http-equiv='refresh' content='0'>";
+        if ($db->num_rows($query_guesterror) == 0) {
+            $db->write_query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
+            redirect('usercp.php?action=relas_usercp');
         }
         if ($opt_pmdelete == 1 && $checknpc == 0) {
             //id setzen
@@ -977,7 +989,17 @@ function relas_usercp()
                 //to: wer muss die anfrage bestätigen
                 "fromid" => intval($mybb->input['getfrom']),
                 //from: wer hat die anfrage gestellt
-                "toid" => intval($mybb->input['getto'])
+                "toid" => intval($mybb->input['getto']),
+                "icon" => "",
+                "do" => "",
+                "pmid" => "",
+            );
+
+            $pm_reanfrage['options'] = array(
+                'signature' => '0',
+                'savecopy' => '0',
+                'disablesmilies' => '0',
+                'readreceipt' => '0',
             );
             // $pmhandler->admin_override = true;
             $pmhandler->set_data($pm_reanfrage);
@@ -987,8 +1009,8 @@ function relas_usercp()
                 $pmhandler->insert_pm();
             }
         }
-        $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
-        echo "<meta http-equiv='refresh' content='0'>";
+        $db->write_query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
+        redirect('usercp.php?action=relas_usercp');
     }
 
     $reaktion = "";
@@ -996,7 +1018,7 @@ function relas_usercp()
     /********
      *  Ausgabe Anfrage - offene Anfragen von anderen Charas
      *******/
-    $ucp_offeneanfragen = $db->query("
+    $ucp_offeneanfragen = $db->write_query("
 		SELECT * FROM " . TABLE_PREFIX . "relas WHERE
 			(r_to = '$dieser_user' AND r_accepted = '0')
 			OR
@@ -1040,7 +1062,7 @@ function relas_usercp()
         $to_array = get_user($to);
         $tolink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
 
-        $db->query("UPDATE " . TABLE_PREFIX . "relas SET r_accepted = 1 WHERE r_id = '" . $relaid . "'");
+        $db->write_query("UPDATE " . TABLE_PREFIX . "relas SET r_accepted = 1 WHERE r_id = '" . $relaid . "'");
         $rela_anfrage = array(
             "r_from" => $to,
             "r_to" => $from,
@@ -1063,7 +1085,17 @@ function relas_usercp()
             //to: wer muss die anfrage bestätigen
             "fromid" => $to,
             //from: wer hat die anfrage gestellt
-            "toid" => $from
+            "toid" => $from,
+            "icon" => "",
+            "do" => "",
+            "pmid" => "",
+        );
+
+        $pm_reanfrage['options'] = array(
+            'signature' => '0',
+            'savecopy' => '0',
+            'disablesmilies' => '0',
+            'readreceipt' => '0',
         );
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_reanfrage);
@@ -1072,7 +1104,7 @@ function relas_usercp()
         else {
             $pmhandler->insert_pm();
         }
-        echo "<meta http-equiv='refresh' content='0'>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     /* eine bekommene Anfrage ablehnen.*/
@@ -1085,14 +1117,24 @@ function relas_usercp()
         $to_array = get_user($mybb->input['getto']);
         $tolink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
 
-        $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
+        $db->write_query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
         $pm_abgelehnt = array(
             "subject" => "Relationanfrage",
             "message" => $tolink . " hat deine Anfrage abgelehnt. Wenn du wissen willst wieso, antworte einfach auf die PN und frage nach :) ",
             //to: wer muss die anfrage bestätigen
             "fromid" => $to,
             //from: wer hat die anfrage gestellt
-            "toid" => $from
+            "toid" => $from,
+            "icon" => "",
+            "do" => "",
+            "pmid" => "",
+        );
+
+        $pm_abgelehnt['options'] = array(
+            'signature' => '0',
+            'savecopy' => '0',
+            'disablesmilies' => '0',
+            'readreceipt' => '0',
         );
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_abgelehnt);
@@ -1101,7 +1143,7 @@ function relas_usercp()
         else {
             $pmhandler->insert_pm();
         }
-        echo "<meta http-equiv='refresh' content='0'>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     /* eine eigene Anfrage zurücknehmen.*/
@@ -1114,23 +1156,32 @@ function relas_usercp()
         $to_array = get_user($mybb->input['getto']);
         $tolink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
 
-        $db->query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
+        $db->write_query("DELETE FROM " . TABLE_PREFIX . "relas WHERE r_id = '" . $relaid . "'");
         $pm_zurueck = array(
             "subject" => "Relations Anfrage",
             "message" => $tolink . " hat seine Anfrage wieder zurückgenommen. Wenn du magst kannst du einfach auf die PN antworten und fragen wieso.",
             //to: wer muss die anfrage bestätigen
             "fromid" => $to,
             //from: wer hat die anfrage gestellt
-            "toid" => $from
+            "toid" => $from,
+            "icon" => "",
+            "do" => "",
+            "pmid" => "",
         );
 
+        $pm_zurueck['options'] = array(
+            'signature' => '0',
+            'savecopy' => '0',
+            'disablesmilies' => '0',
+            'readreceipt' => '0',
+        );
         $pmhandler->set_data($pm_zurueck);
         if (!$pmhandler->validate_pm())
             return false;
         else {
             $pmhandler->insert_pm();
         }
-        echo "<meta http-equiv='refresh' content='0'>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     /*Erinnern anderer Charaktere an schon gestellte Rela Anfrage */
@@ -1145,7 +1196,17 @@ function relas_usercp()
             "message" => $fromlink . ' hat dir eine Anfrage geschickt. Du hast noch nicht reagiert.
             Bitte schau einmal in dein <a href="usercp.php?action=relas_usercp">User CP</a>',
             "fromid" => $from,
-            "toid" => $to
+            "toid" => $to,
+            "icon" => "",
+            "do" => "",
+            "pmid" => "",
+        );
+
+        $pm_erinnerung['options'] = array(
+            'signature' => '0',
+            'savecopy' => '0',
+            'disablesmilies' => '0',
+            'readreceipt' => '0',
         );
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_erinnerung);
@@ -1154,7 +1215,7 @@ function relas_usercp()
         else {
             $pmhandler->insert_pm();
         }
-        echo "<meta http-equiv='refresh' content='0'>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     $inputsRequest_own = "";
@@ -1193,7 +1254,7 @@ function relas_usercp()
 
         $db->insert_query("relas", $rela_anfrage);
 
-        echo "<meta http-equiv='refresh' content='0'>";
+        redirect('usercp.php?action=relas_usercp');
     }
 
     eval("\$relas_usercp = \"" . $templates->get("relas_usercp") . "\";");
