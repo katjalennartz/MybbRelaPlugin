@@ -591,7 +591,7 @@ function relas_ucp_buildInput($kategorien_own, $check_kat, $inputs_own)
 $plugins->add_hook("member_profile_start", "relations_profile");
 function relations_profile()
 {
-    global $db, $mybb, $templates, $rela_anfrage, $relas_profil, $auf_profil, $inputs_own, $showrelas, $relas_ucpAddNPC;
+    global $db, $mybb, $session, $templates, $rela_anfrage, $relas_profil, $auf_profil, $inputs_own, $showrelas, $relas_ucpAddNPC;
     require_once MYBB_ROOT . "inc/datahandlers/pm.php";
     $pmhandler = new PMDataHandler();
     require_once MYBB_ROOT . "inc/class_parser.php";
@@ -722,11 +722,18 @@ function relations_profile()
 
     //Daten speichern bei Anfrage
     if ($mybb->input['anfragen'] && $mybb->user['uid'] != 0) {
+        if (isset($mybb->input['kommentar'])) {
+            $mybb->input['kommentar'] = $db->escape_string($mybb->input['kommentar']);
+        }
+        if (isset($mybb->input['kategorie'])) {
+            $mybb->input['kategorie'] = $db->escape_string($mybb->input['kategorie']);
+        }
+
         $rela_anfrage = array(
             "r_from" => intval($dieser_user),
             "r_to" => intval($auf_profil),
-            "r_kategorie" => $db->escape_string($mybb->input['kategorie']),
-            "r_kommentar" => $db->escape_string($mybb->input['kommentar']),
+            "r_kategorie" => $mybb->input['kategorie'],
+            "r_kommentar" => $mybb->input['kommentar'],
             "r_sort" => intval($mybb->input['sort']),
             "r_accepted" => 0,
             "r_npc" => 0
@@ -741,10 +748,14 @@ function relations_profile()
             redirect("member.php?action=profile&uid={$auf_profil}");
             // echo "<meta http-equiv='refresh' content='0'>";
         } else if ($kat != "") {
+
             //eintragen
             $db->insert_query("relas", $rela_anfrage);
-
-            $pmkom = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
+            if (isset($mybb->input['kommentar'])) {
+                $pmkom = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
+            } else {
+                $pmkom = "Keine Beschreibung";
+            }
             //PN losschicken
             $pm_change = array(
                 "subject" => "Relationsanfrage",
@@ -767,6 +778,10 @@ function relations_profile()
                 'disablesmilies' => '0',
                 'readreceipt' => '0',
             );
+
+            if (isset($session)) {
+                $pm_change['ipaddress'] = $session->packedip;
+            }
 
             $pmhandler->set_data($pm_change);
             if (!$pmhandler->validate_pm()) {
@@ -810,7 +825,8 @@ function relas_usercp()
         $header, $footer, $usercpnav, $relas_ucp_offene,
         $relas_ucp_accepted, $inputs_own, $titel,
         $list_own_cats, $inputsRequest_own,
-        $relas_ucp_cats, $relas_ucp_catbit;
+        $relas_ucp_cats, $relas_ucp_catbit, $session;
+    $mybb->input['action'] = $mybb->get_input('action');
     if ($mybb->input['action'] != "relas_usercp") {
         return false;
     }
@@ -861,7 +877,10 @@ function relas_usercp()
         $who_link = build_profile_link($who['username'], $who['uid'], '_blank');
         $who_id = $who['uid'];
         $who_img = $who['avatar'];
-        $kategorie = $db->escape_string($get_accepted['r_kategorie']);
+        if (isset($get_accepted['r_kategorie'])) {
+            $get_accepted['r_kategorie'] =  $db->escape_string($get_accepted['r_kategorie']);
+        }
+        $kategorie = $get_accepted['r_kategorie'];
         if ($catFromLastEntry != $kategorie) {
             $titel = "<br /><headtitle_big>" . $kategorie . "</headtitle_big>";
         } else {
@@ -921,12 +940,23 @@ function relas_usercp()
     if (isset($mybb->input['change'])) {
         //id setzen
         $relaid = intval($mybb->input['getrela']);
-        $upd_kat = $db->escape_string($mybb->input['kategorie']);
-        $upd_kommentar = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
-        $upd_sort = intval($mybb->input['sort']);
-        $npcname = $db->escape_string($mybb->input['npcname']);
-        $npcimg = $db->escape_string($mybb->input['npcimg']);
+        if (isset($mybb->input['kategorie'])) {
+            $mybb->input['kategorie'] = $db->escape_string($mybb->input['kategorie']);
+        }
 
+        $upd_kat = $mybb->get_input('kategorie');
+
+        $upd_kommentar = $mybb->input['kommentar'];
+        if (isset($mybb->input['kommentar'])) {
+            $upd_kommentar = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
+        }
+        $upd_sort = intval($mybb->input['sort']);
+        if (!isset($mybb->input['npcname'])) {
+            $npcname = $db->escape_string($mybb->input['npcname']);
+        }
+        if (!isset($mybb->input['npcimg'])) {
+            $npcimg = $db->escape_string($mybb->input['npcimg']);
+        }
         $query_npc = $db->simple_select('relas', 'r_npc', "r_id ='" . $relaid . "'", array('LIMIT' => 1));
         $checknpc = $db->fetch_field($query_npc, 'r_npc');
 
@@ -954,6 +984,10 @@ function relas_usercp()
                 'disablesmilies' => '0',
                 'readreceipt' => '0',
             );
+
+            if (isset($session)) {
+                $pm_reanfrage['ipaddress'] = $session->packedip;
+            }
             // $pmhandler->admin_override = true;
             $pmhandler->set_data($pm_reanfrage);
             if (!$pmhandler->validate_pm())
@@ -1001,6 +1035,11 @@ function relas_usercp()
                 'disablesmilies' => '0',
                 'readreceipt' => '0',
             );
+
+            if (isset($session)) {
+                $pm_reanfrage['ipaddress'] = $session->packedip;
+            }
+
             // $pmhandler->admin_override = true;
             $pmhandler->set_data($pm_reanfrage);
             if (!$pmhandler->validate_pm()) {
@@ -1061,20 +1100,29 @@ function relas_usercp()
         $to = intval($mybb->input['getto']);
         $to_array = get_user($to);
         $tolink = build_profile_link($to_array['username'], $to_array['uid'], '_blank');
+        if (isset($mybb->input['kategorie'])) {
+            $mybb->input['kategorie'] = $db->escape_string($mybb->input['kategorie']);
+        }
+        if (isset($mybb->input['kommentar'])) {
+            $mybb->input['kommentar'] =  $db->escape_string($mybb->input['kommentar']);
+        }
 
         $db->write_query("UPDATE " . TABLE_PREFIX . "relas SET r_accepted = 1 WHERE r_id = '" . $relaid . "'");
         $rela_anfrage = array(
             "r_from" => $to,
             "r_to" => $from,
-            "r_kategorie" => $db->escape_string($mybb->input['kategorie']),
-            "r_kommentar" => $db->escape_string($mybb->input['kommentar']),
+            "r_kategorie" => $mybb->input['kategorie'],
+            "r_kommentar" => $mybb->input['kommentar'],
             "r_sort" => intval($mybb->input['sort']),
             "r_accepted" => 1,
             "r_npc" => 0
         );
 
         $db->insert_query("relas", $rela_anfrage);
-        $pm_kommentar = str_replace('\r\n', "\r\n", $db->escape_string(nl2br($mybb->input['kommentar'])));
+        if (isset($mybb->input['kommentar'])) {
+            $mybb->input['kommentar'] =  $db->escape_string(nl2br($mybb->input['kommentar']));
+        }
+        $pm_kommentar = str_replace('\r\n', "\r\n", $mybb->input['kommentar']);
         $pm_reanfrage = array(
             "subject" => "Relations Anfrage",
             "message" =>
@@ -1097,6 +1145,9 @@ function relas_usercp()
             'disablesmilies' => '0',
             'readreceipt' => '0',
         );
+        if (isset($session)) {
+            $pm_reanfrage['ipaddress'] = $session->packedip;
+        }
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_reanfrage);
         if (!$pmhandler->validate_pm())
@@ -1136,6 +1187,10 @@ function relas_usercp()
             'disablesmilies' => '0',
             'readreceipt' => '0',
         );
+
+        if (isset($session)) {
+            $pm_abgelehnt['ipaddress'] = $session->packedip;
+        }
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_abgelehnt);
         if (!$pmhandler->validate_pm())
@@ -1175,6 +1230,9 @@ function relas_usercp()
             'disablesmilies' => '0',
             'readreceipt' => '0',
         );
+        if (isset($session)) {
+            $pm_zurueck['ipaddress'] = $session->packedip;
+        }
         $pmhandler->set_data($pm_zurueck);
         if (!$pmhandler->validate_pm())
             return false;
@@ -1201,13 +1259,15 @@ function relas_usercp()
             "do" => "",
             "pmid" => "",
         );
-
         $pm_erinnerung['options'] = array(
             'signature' => '0',
             'savecopy' => '0',
             'disablesmilies' => '0',
             'readreceipt' => '0',
         );
+        if (isset($session)) {
+            $pm_erinnerung['ipaddress'] = $session->packedip;
+        }
         // $pmhandler->admin_override = true;
         $pmhandler->set_data($pm_erinnerung);
         if (!$pmhandler->validate_pm())
@@ -1240,20 +1300,31 @@ function relas_usercp()
             echo "<script>alert('Bitte eine Kategorie auswählen')</script></font>";
             redirect('usercp.php?action=relas_usercp');
         }
+        if (isset($mybb->input['npcname'])) {
+            $mybb->input['npcname'] = $db->escape_string($mybb->input['npcname']);
+        }
+        if (isset($mybb->input['kategorie'])) {
+            $mybb->input['kategorie'] = $db->escape_string($mybb->input['kategorie']);
+        }
+        if (isset($mybb->input['kommentar'])) {
+            $mybb->input['kommentar'] = $db->escape_string($mybb->input['kommentar']);
+        }
+        if (isset($mybb->input['npcimg'])) {
+            $mybb->input['npcimg'] = $db->escape_string($mybb->input['npcimg']);
+        }
         $rela_anfrage = array(
-            "r_npcname" => $db->escape_string($mybb->input['npcname']),
+            "r_npcname" => $mybb->input['npcname'],
             "r_to" => $dieser_user,
             "r_from" => $dieser_user,
-            "r_kategorie" => $db->escape_string($mybb->input['kategorie']),
-            "r_kommentar" => $db->escape_string($mybb->input['kommentar']),
+            "r_kategorie" => $mybb->input['kategorie'],
+            "r_kommentar" => $mybb->input['kommentar'],
             "r_sort" => intval($mybb->input['sort']),
             "r_accepted" => 1,
             "r_npc" => 1,
-            "r_npcimg" => $db->escape_string($mybb->input['npcimg'])
+            "r_npcimg" => $mybb->input['npcimg'],
         );
 
         $db->insert_query("relas", $rela_anfrage);
-
         redirect('usercp.php?action=relas_usercp');
     }
 
