@@ -679,12 +679,12 @@ function relations_profile()
                 $r_from = $get_relas['r_to'];
                 $who_link = build_profile_link($who['username'], $who['uid'], '_blank');
                 $who_id = $who['uid'];
-                $kat = htmlentities($get_relas['r_kategorie']);
+                $kat = htmlspecialchars($get_relas['r_kategorie']);
 
                 $kommentar = $parser->parse_message($get_relas['r_kommentar'], $options);
                 $sort = intval($get_relas['r_sort']);
                 $r_id = intval($get_relas['r_id']);
-                $rnpcname = htmlentities($get_relas['r_npcname']);
+                $rnpcname = htmlspecialchars($get_relas['r_npcname']);
                 $r_npc = $get_relas['r_npc'];
                 $img_width = intval($mybb->settings['relas_img_width']);
                 $tab_width = $img_width + 5;
@@ -709,7 +709,7 @@ function relations_profile()
 
                 //Sorgt dafür, dass die Kategorie nur einmal als Überschrift ausgeben wird.
                 if ($counter == 1) {
-                    ${$kategorie . 'titel'} = "<headtitle_big>" . htmlentities($kategorie) . "</headtitle_big>";
+                    ${$kategorie . 'titel'} = "<headtitle_big>" . htmlspecialchars($kategorie) . "</headtitle_big>";
                 } else {
                     ${$kategorie . 'titel'} = "";
                 }
@@ -887,11 +887,11 @@ function relas_usercp()
             $titel = "";
         }
 
-        $kommentar = htmlentities($get_accepted['r_kommentar']);
+        $kommentar = htmlspecialchars($get_accepted['r_kommentar']);
 
         $sort = intval($get_accepted['r_sort']);
         $r_id = $get_accepted['r_id'];
-        $rnpcname = htmlentities($get_accepted['r_npcname']);
+        $rnpcname = htmlspecialchars($get_accepted['r_npcname']);
         $r_npc = $get_accepted['r_npc'];
         $rnpcimg = $get_accepted['r_npcimg'];
 
@@ -1073,7 +1073,7 @@ function relas_usercp()
         $r_tolink = build_profile_link($angefragt['username'], $angefragt['uid'], '_blank');;
         $r_from = build_profile_link($anfragender['username'], $anfragender['uid'], '_blank');
         $gefragte_kategorie = $get_anfrage['r_kategorie'];
-        $kommentar = htmlentities($get_anfrage['r_kommentar']);
+        $kommentar = htmlspecialchars($get_anfrage['r_kommentar']);
         $r_status = $get_anfrage['r_accepted'];
         $inputsRequest_own = "";
 
