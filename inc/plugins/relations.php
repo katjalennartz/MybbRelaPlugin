@@ -14,8 +14,8 @@
  */
 
 // enable for Debugging:
-error_reporting(-1);
-ini_set('display_errors', true);
+//error_reporting(-1);
+//ini_set('display_errors', true);
 
 global $db, $mybb;
 // Disallow direct access to this file for security reasons
