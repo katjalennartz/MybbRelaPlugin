@@ -204,7 +204,7 @@ function relations_install()
 				</tr>
 				<tr>
 				  <td align="right" valign="top">
-					<input type="text" name="sort" value="{$sort}" class="rela sort"/><br/>
+					<input type="text" name="sort" class="rela sort"/><br/>
 					<span class="smalltext">1 heißt der Charakter wird als erstes aufgelistet.</span>
 				  </td>
 				
