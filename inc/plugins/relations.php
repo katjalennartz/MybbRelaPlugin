@@ -189,49 +189,46 @@ function relations_install()
 
     $template[3] = array(
         "title" => 'relas_memberprofil_anfrage',
-        "template" => '
-				<tr><td class="mem_name" colspan="2">
-					<headtitle_big>Anfrage stellen</headtitle_big>
-					</td></tr>
-				<tr><td  colspan="2" align="center">
-				<form action="" method="post">
-				<div class="divbox_ucp_relas">
+        "template" => '<tr>
+	<td class="mem_name" colspan="2">
+		<headtitle_big>Anfrage stellen</headtitle_big>
+	</td>
+</tr>
+<tr>
+	<td  colspan="2" align="center">
+		<form action="" method="post">
+			<div class="divbox_ucp_relas">
 				<table width="80%">
-				  <td align="right" width="20%">
-					<b>Sortierung</b>
-				  </td>
-				  <td align="left"><b>Kommentar:</b></td>
-				</tr>
-				<tr>
-				  <td align="right" valign="top">
-					<input type="text" name="sort" class="rela sort"/><br/>
-					<span class="smalltext">1 heißt der Charakter wird als erstes aufgelistet.</span>
-				  </td>
-				
-				  <td align="left" valign="top">
-				  <textarea name="kommentar" class="textarea_kommentar">{$kommentar}</textarea>
-				  <input type="hidden" name="getrela" value="{$r_id}">
-				  </td>
-				</tr>
-				<tr>
-				  <td colspan="2" align="center">
-					<span class="smalltext">
-					{$inputs_own} </span>
-				  </td>
-				</tr>
-				<tr>
-				  <td colspan="2" align="center">
-					<input type="hidden" name="getto" value="{$who_id}" />
-					<input type="hidden" name="getfrom" value="{$r_from}" />
-				
-				  <input type="submit" name="anfragen" value="anfragen" id="rela_button"/>
-				  </td>
-				</tr>
+					<tr>
+						<td align="right" width="20%">
+							<b>Sortierung</b>
+						</td>
+						<td align="left"><b>Kommentar:</b></td>
+					</tr>
+					<tr>
+						<td align="right" valign="top">
+							<input type="number" name="sort" class="rela sort"/><br/>
+							<span class="smalltext">1 heißt der Charakter wird als erstes aufgelistet.</span>
+						</td>
+						<td align="left" valign="top">
+							<textarea name="kommentar" class="textarea_kommentar"></textarea>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" align="center">
+							<span class="smalltext">{$inputs_own}</span>
+						</td> 
+					</tr>
+					<tr>
+						<td>
+							<input type="submit" name="anfragen" value="anfragen" id="rela_button"/>
+						</td>
+					</tr>
 				</table>
-				</div>
-				</form><br /><br />
-				</td>
-				</tr>
+			</div>
+		</form><br /><br />
+	</td>
+</tr>
 		',
         "sid" => "-1",
         "version" => "1.0",
