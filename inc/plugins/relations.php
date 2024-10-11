@@ -555,8 +555,8 @@ function get_Cats($uid)
 /**
  * Hilfsfunktion build input radio UCP
  * Param
- * $kategorien_own = Array mit Kategorien
- * $check_kat = Aus Query -> zum check welche ist vorausgewählt?
+ * @param array kategorien_own = Array mit Kategorien
+ * @param string check_kat = Aus Query -> zum check welche ist vorausgewählt?
  * $inputs_own um alle zusammenzufügen
  */
 function relas_ucp_buildInput($kategorien_own, $check_kat, $inputs_own)
@@ -667,8 +667,6 @@ function relations_profile()
 
                 //alle infos des User zu dem Rela besteht bekommen
                 $who = get_user($get_relas['r_to']);
-
-
 
                 //infos sowohl npc als auch user
                 $r_from = $get_relas['r_to'];
@@ -813,7 +811,7 @@ function relas_usercp()
         $header, $footer, $usercpnav, $relas_ucp_offene,
         $relas_ucp_accepted, $inputs_own, $titel,
         $list_own_cats, $inputsRequest_own,
-        $relas_ucp_cats, $relas_ucp_catbit, $session;
+        $relas_ucp_cats, $relas_ucp_catbit, $session, $gefragte_kategorie;
     $mybb->input['action'] = $mybb->get_input('action');
     if ($mybb->input['action'] != "relas_usercp") {
         return false;
@@ -846,14 +844,16 @@ function relas_usercp()
     //Kategorien input bauen: Kategorien des users der online ist!
     $kategorien_own = get_Cats($dieser_user);
 
-    /* Anzeige und bauen der eigenen Kategorien */
+    /* Anzeige und bauen der eigenen Kategorien zum anfrage senden*/
     foreach ($kategorien_own as $kategorie_own) {
-
         eval("\$relas_ucp_catbit .= \"" . $templates->get("relas_ucp_catbit") . "\";");
     }
 
     eval("\$relas_ucp_cats = \"" . $templates->get("relas_ucp_cats") . "\";");
     //    $list_own_cats = '<table width="200px" class="table_own_cats_ucp">' . $list_own_cats_li . '</table>';
+
+
+    $kategorie = '';
 
     /* eigene Kategorien verwalten und anzeige von akzeptierten Charas */
     while ($get_accepted = $db->fetch_array($ucp_akzeptiert)) {
@@ -862,12 +862,11 @@ function relas_usercp()
 
         $who = get_user($get_accepted['r_to']);
         $r_from = $get_accepted['r_from'];
-        $who_link = build_profile_link($who['username'], $who['uid'], '_blank');
-        $who_id = $who['uid'];
-        $who_img = $who['avatar'];
+
         if (isset($get_accepted['r_kategorie'])) {
-            $get_accepted['r_kategorie'] =  $db->escape_string($get_accepted['r_kategorie']);
+            $kategorie =  $get_accepted['r_kategorie'];
         }
+
         if ($catFromLastEntry != $kategorie) {
             $titel = "<br /><headtitle_big>" . $kategorie . "</headtitle_big>";
         } else {
@@ -876,11 +875,14 @@ function relas_usercp()
 
         $kommentar = htmlspecialchars($get_accepted['r_kommentar']);
 
-        $sort = intval($get_accepted['r_sort']);
-        $r_id = $get_accepted['r_id'];
+        //NPC 
         $rnpcname = htmlspecialchars($get_accepted['r_npcname']);
-        $r_npc = $get_accepted['r_npc'];
         $rnpcimg = $get_accepted['r_npcimg'];
+        $feld_npcimg = '';
+
+        $r_id = $get_accepted['r_id'];
+        $sort = intval($get_accepted['r_sort']);
+        $r_npc = $get_accepted['r_npc'];
 
         /*rpc name und bild ändern*/
         if ($r_npc == 1) {
@@ -890,6 +892,8 @@ function relas_usercp()
 				<input type="text" name="npcname" class ="rela_button npcname" value="' . $rnpcname . '">
 				</td></tr>';
             $who_link = $rnpcname;
+            $who_img = "";
+            $who_id = "";
             /*npc image ändern*/
             if ($opt_npc_img == 1) {
                 $feld_npcimg =  '
@@ -898,6 +902,10 @@ function relas_usercp()
 				<input type="text" name="npcimg" class ="rela_button npcimg" value="' . $rnpcimg . '">
 				</td></tr>';
             }
+        } else {
+            $who_id = $who['uid'];
+            $who_img = $who['avatar'];
+            $who_link = build_profile_link($who['username'], $who['uid'], '_blank');
         }
         /*radio input Kategorien bauen -> Hilfsfunktion aufrufen*/
         $inputs_own = relas_ucp_buildInput($kategorien_own, $kategorie, $inputs_own);
